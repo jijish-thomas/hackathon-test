@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import {
+  Button,
   Column,
   Content,
   Grid,
@@ -11,11 +13,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableToolbar,
+  TableToolbarContent,
   Tag,
   Theme,
   Tile,
 } from '@carbon/react'
-import users from './common/users.json'
+import { Add } from '@carbon/icons-react'
+import initialUsers from './common/users.json'
+import AddUserModal from './AddUserModal'
 import './App.css'
 
 const STATUS_TO_TAG = {
@@ -25,7 +31,15 @@ const STATUS_TO_TAG = {
 }
 
 function App() {
+  const [users, setUsers] = useState(initialUsers)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const headings = ['Name', 'Email', 'Role', 'Location', 'Status']
+
+  function handleAddUser(newUserFields) {
+    const nextId = users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1
+    setUsers((prev) => [...prev, { id: nextId, ...newUserFields }])
+    setIsModalOpen(false)
+  }
 
   return (
     <>
@@ -54,6 +68,16 @@ function App() {
               title="Team Users"
               description="Source: src/common/users.json"
             >
+              <TableToolbar>
+                <TableToolbarContent>
+                  <Button
+                    renderIcon={Add}
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    Add User
+                  </Button>
+                </TableToolbarContent>
+              </TableToolbar>
               <Table size="lg" useZebraStyles aria-label="Users table">
                 <TableHead>
                   <TableRow>
@@ -82,6 +106,12 @@ function App() {
           </Column>
         </Grid>
       </Content>
+
+      <AddUserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddUser={handleAddUser}
+      />
     </>
   )
 }
