@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "Ava Johnson",
+    "email": "ava.johnson@example.com",
+    "role": "Product Manager",
+    "location": "Austin, TX",
+    "status": "Active"
+  },
+  {
+    "id": 2,
+    "name": "Noah Patel",
+    "email": "noah.patel@example.com",
+    "role": "Frontend Engineer",
+    "location": "Seattle, WA",
+    "status": "Active"
+  },
+  {
+    "id": 3,
+    "name": "Mia Chen",
+    "email": "mia.chen@example.com",
+    "role": "UX Designer",
+    "location": "New York, NY",
+    "status": "Pending"
+  },
+  {
+    "id": 4,
+    "name": "Liam Garcia",
+    "email": "liam.garcia@example.com",
+    "role": "Backend Engineer",
+    "location": "Denver, CO",
+    "status": "Inactive"
+  },
+  {
+    "id": 5,
+    "name": "Sophia Nguyen",
+    "email": "sophia.nguyen@example.com",
+    "role": "QA Engineer",
+    "location": "Boston, MA",
+    "status": "Active"
+  }
+]

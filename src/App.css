@@ -1,0 +1,33 @@
+.page-content {
+  min-height: 100vh;
+  padding-top: 5rem;
+  background: linear-gradient(180deg, #f4f4f4 0%, #ffffff 35%, #ffffff 100%);
+}
+
+.page-grid {
+  padding: 1rem;
+  row-gap: 1rem;
+}
+
+.intro-tile {
+  border-left: 4px solid #0f62fe;
+}
+
+.intro-tile h1 {
+  margin: 0 0 0.75rem;
+}
+
+.intro-tile p {
+  margin: 0;
+  max-width: 60ch;
+}
+
+@media (max-width: 42rem) {
+  .page-content {
+    padding-top: 4rem;
+  }
+
+  .page-grid {
+    padding: 0.5rem;
+  }
+}
