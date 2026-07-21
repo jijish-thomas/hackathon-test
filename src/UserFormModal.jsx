@@ -32,8 +32,10 @@ function validate(fields) {
   return errors
 }
 
-function AddUserModal({ isOpen, onClose, onAddUser }) {
-  const [fields, setFields] = useState(EMPTY_FORM)
+function UserFormModal({ isOpen, onClose, onAddUser, onSave, mode = 'add', initialValues }) {
+  const [fields, setFields] = useState(
+    mode === 'edit' && initialValues ? { ...initialValues } : EMPTY_FORM
+  )
   const [errors, setErrors] = useState({})
 
   function handleChange(e) {
@@ -55,22 +57,29 @@ function AddUserModal({ isOpen, onClose, onAddUser }) {
       setErrors(errs)
       return
     }
-    onAddUser({
+    const payload = {
       name: fields.name.trim(),
       email: fields.email.trim(),
       role: fields.role.trim(),
       location: fields.location.trim(),
       status: fields.status,
-    })
+    }
+    if (mode === 'edit' && onSave) {
+      onSave(payload)
+    } else if (onAddUser) {
+      onAddUser(payload)
+    }
     setFields(EMPTY_FORM)
     setErrors({})
   }
 
+  const isEdit = mode === 'edit'
+
   return (
     <Modal
       open={isOpen}
-      modalHeading="Add User"
-      primaryButtonText="Add"
+      modalHeading={isEdit ? 'Edit User' : 'Add User'}
+      primaryButtonText={isEdit ? 'Save' : 'Add'}
       secondaryButtonText="Cancel"
       onRequestClose={handleClose}
       onSecondarySubmit={handleClose}
@@ -138,4 +147,4 @@ function AddUserModal({ isOpen, onClose, onAddUser }) {
   )
 }
 
-export default AddUserModal
+export default UserFormModal

@@ -19,9 +19,10 @@ import {
   Theme,
   Tile,
 } from '@carbon/react'
-import { Add } from '@carbon/icons-react'
+import { Add, Edit, TrashCan } from '@carbon/icons-react'
 import initialUsers from './common/users.json'
-import AddUserModal from './AddUserModal'
+import UserFormModal from './UserFormModal'
+import DeleteConfirmModal from './DeleteConfirmModal'
 import './App.css'
 
 const STATUS_TO_TAG = {
@@ -33,12 +34,26 @@ const STATUS_TO_TAG = {
 function App() {
   const [users, setUsers] = useState(initialUsers)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const headings = ['Name', 'Email', 'Role', 'Location', 'Status']
+  const [editingUser, setEditingUser] = useState(null)
+  const [deletingUser, setDeletingUser] = useState(null)
+  const headings = ['Name', 'Email', 'Role', 'Location', 'Status', 'Actions']
 
   function handleAddUser(newUserFields) {
     const nextId = users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1
     setUsers((prev) => [...prev, { id: nextId, ...newUserFields }])
     setIsModalOpen(false)
+  }
+
+  function handleEditUser(updatedFields) {
+    setUsers((prev) =>
+      prev.map((u) => (u.id === editingUser.id ? { ...u, ...updatedFields } : u))
+    )
+    setEditingUser(null)
+  }
+
+  function handleDeleteUser(id) {
+    setUsers((prev) => prev.filter((u) => u.id !== id))
+    setDeletingUser(null)
   }
 
   return (
@@ -98,6 +113,26 @@ function App() {
                           {user.status}
                         </Tag>
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          kind="ghost"
+                          size="sm"
+                          renderIcon={Edit}
+                          iconDescription="Edit user"
+                          hasIconOnly
+                          onClick={() => setEditingUser(user)}
+                          aria-label={`Edit ${user.name}`}
+                        />
+                        <Button
+                          kind="ghost"
+                          size="sm"
+                          renderIcon={TrashCan}
+                          iconDescription="Delete user"
+                          hasIconOnly
+                          onClick={() => setDeletingUser(user)}
+                          aria-label={`Delete ${user.name}`}
+                        />
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -107,11 +142,31 @@ function App() {
         </Grid>
       </Content>
 
-      <AddUserModal
+      <UserFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAddUser={handleAddUser}
+        mode="add"
       />
+
+      {editingUser && (
+        <UserFormModal
+          key={editingUser.id}
+          isOpen
+          onClose={() => setEditingUser(null)}
+          onSave={handleEditUser}
+          mode="edit"
+          initialValues={editingUser}
+        />
+      )}
+
+      {deletingUser && (
+        <DeleteConfirmModal
+          user={deletingUser}
+          onConfirm={handleDeleteUser}
+          onClose={() => setDeletingUser(null)}
+        />
+      )}
     </>
   )
 }
