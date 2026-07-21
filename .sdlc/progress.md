@@ -11,7 +11,7 @@
 | 2. Plan      | complete | prd.md | 2025-07-14T00:03:00Z |
 | 3. Implement | complete | implementation.md | 2025-07-14T00:04:00Z |
 | 4. Test      | complete | test-report.md | 2025-07-14T00:18:00Z |
-| 5. Ship      | pending | ship.md | - |
+| 5. Ship      | complete | ship.md | 2025-07-14T00:20:00Z |
 
 ## Log
 - 2025-07-14T00:00:00Z Pipeline created. Feature: "introduce edit and delete functionality".
@@ -24,3 +24,4 @@
 - 2025-07-14T00:03:00Z Phase 2 complete. Jira story SCRUM-6 created (https://manoo-team.atlassian.net/browse/SCRUM-6). prd.md written. 8 acceptance criteria. Handing off to Phase 3 (Implement).
 - 2025-07-14T00:04:00Z Phase 3 complete. Branch feature/SCRUM-6-edit-delete-user, 1 commit, self-review green (16/16 tests, lint clean, build pass). Handing off to Phase 4 (Test).
 - 2025-07-14T00:18:00Z Phase 4 complete. 35/35 tests pass. AC coverage 8/8. test-report.md written. Verdict: PASS. Handing off to Phase 5 (Ship).
+- 2025-07-14T00:20:00Z Phase 5 complete. PR #2 opened (https://github.com/jijish-thomas/hackathon-test/pull/2). SCRUM-6 transitioned to In Review. Pipeline run complete.
