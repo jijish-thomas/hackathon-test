@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Form,
   Modal,
@@ -32,9 +32,27 @@ function validate(fields) {
   return errors
 }
 
-function AddUserModal({ isOpen, onClose, onAddUser }) {
+function AddUserModal({ isOpen, onClose, onAddUser, onSaveUser, initialUser }) {
+  const isEditMode = Boolean(initialUser)
   const [fields, setFields] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    if (isOpen) {
+      setFields(
+        initialUser
+          ? {
+              name: initialUser.name,
+              email: initialUser.email,
+              role: initialUser.role,
+              location: initialUser.location,
+              status: initialUser.status,
+            }
+          : EMPTY_FORM,
+      )
+      setErrors({})
+    }
+  }, [isOpen, initialUser])
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -55,13 +73,18 @@ function AddUserModal({ isOpen, onClose, onAddUser }) {
       setErrors(errs)
       return
     }
-    onAddUser({
+    const payload = {
       name: fields.name.trim(),
       email: fields.email.trim(),
       role: fields.role.trim(),
       location: fields.location.trim(),
       status: fields.status,
-    })
+    }
+    if (isEditMode) {
+      onSaveUser({ ...initialUser, ...payload })
+    } else {
+      onAddUser(payload)
+    }
     setFields(EMPTY_FORM)
     setErrors({})
   }
@@ -69,8 +92,8 @@ function AddUserModal({ isOpen, onClose, onAddUser }) {
   return (
     <Modal
       open={isOpen}
-      modalHeading="Add User"
-      primaryButtonText="Add"
+      modalHeading={isEditMode ? 'Edit User' : 'Add User'}
+      primaryButtonText={isEditMode ? 'Save' : 'Add'}
       secondaryButtonText="Cancel"
       onRequestClose={handleClose}
       onSecondarySubmit={handleClose}
