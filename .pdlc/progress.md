@@ -11,7 +11,7 @@
 | 2. Plan      | complete | prd.md | 2025-07-14T00:20:00Z |
 | 3. Implement | complete | implementation.md | 2025-07-14T00:35:00Z |
 | 4. Test      | complete | test-report.md | 2025-07-14T00:55:00Z |
-| 5. Ship      | pending | ship.md | - |
+| 5. Ship      | complete | ship.md | 2025-07-14T01:00:00Z |
 
 ## Log
 - 2025-07-14T00:00:00Z Pipeline created. Feature: "introduce edit and delete functionality".
@@ -26,3 +26,4 @@
 - 2025-07-14T00:45:01Z Phase 3 set back to in_progress for fix loop iteration 1.
 - 2025-07-14T00:55:00Z Phase 4 (Test) PASS after fix loop iteration 2. 47/47 tests pass. AC 8/8 covered. test-report.md updated.
 - 2025-07-14T00:55:01Z Advancing to Phase 5 (Ship).
+- 2025-07-14T01:00:00Z Phase 5 (Ship) complete. PR #3 open (https://github.com/jijish-thomas/hackathon-test/pull/3). SCRUM-8 transitioned to In Review. ship.md written. Pipeline run closed.
