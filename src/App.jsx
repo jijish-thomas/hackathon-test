@@ -6,6 +6,7 @@ import {
   Grid,
   Header,
   HeaderName,
+  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -19,9 +20,10 @@ import {
   Theme,
   Tile,
 } from '@carbon/react'
-import { Add } from '@carbon/icons-react'
+import { Add, Edit, TrashCan } from '@carbon/icons-react'
 import initialUsers from './common/users.json'
 import AddUserModal from './AddUserModal'
+import DeleteConfirmModal from './DeleteConfirmModal'
 import './App.css'
 
 const STATUS_TO_TAG = {
@@ -33,13 +35,28 @@ const STATUS_TO_TAG = {
 function App() {
   const [users, setUsers] = useState(initialUsers)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const headings = ['Name', 'Email', 'Role', 'Location', 'Status']
+  const [editingUser, setEditingUser] = useState(null)
+  const [deleteTargetId, setDeleteTargetId] = useState(null)
+
+  const headings = ['Name', 'Email', 'Role', 'Location', 'Status', 'Actions']
 
   function handleAddUser(newUserFields) {
     const nextId = users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1
     setUsers((prev) => [...prev, { id: nextId, ...newUserFields }])
     setIsModalOpen(false)
   }
+
+  function handleSaveUser(updatedUser) {
+    setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)))
+    setEditingUser(null)
+  }
+
+  function handleConfirmDelete(id) {
+    setUsers((prev) => prev.filter((u) => u.id !== id))
+    setDeleteTargetId(null)
+  }
+
+  const deleteTarget = users.find((u) => u.id === deleteTargetId)
 
   return (
     <>
@@ -98,6 +115,24 @@ function App() {
                           {user.status}
                         </Tag>
                       </TableCell>
+                      <TableCell>
+                        <IconButton
+                          label={`Edit ${user.name}`}
+                          kind="ghost"
+                          size="sm"
+                          onClick={() => setEditingUser(user)}
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton
+                          label={`Delete ${user.name}`}
+                          kind="ghost"
+                          size="sm"
+                          onClick={() => setDeleteTargetId(user.id)}
+                        >
+                          <TrashCan />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -111,6 +146,20 @@ function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAddUser={handleAddUser}
+      />
+
+      <AddUserModal
+        isOpen={Boolean(editingUser)}
+        onClose={() => setEditingUser(null)}
+        onSaveUser={handleSaveUser}
+        initialUser={editingUser}
+      />
+
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteTarget)}
+        userName={deleteTarget?.name ?? ''}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirmDelete={() => handleConfirmDelete(deleteTargetId)}
       />
     </>
   )
