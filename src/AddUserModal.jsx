@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Form,
   Modal,
@@ -34,25 +34,18 @@ function validate(fields) {
 
 function AddUserModal({ isOpen, onClose, onAddUser, onSaveUser, initialUser }) {
   const isEditMode = Boolean(initialUser)
-  const [fields, setFields] = useState(EMPTY_FORM)
+  const [fields, setFields] = useState(
+    initialUser
+      ? {
+          name: initialUser.name,
+          email: initialUser.email,
+          role: initialUser.role,
+          location: initialUser.location,
+          status: initialUser.status,
+        }
+      : EMPTY_FORM,
+  )
   const [errors, setErrors] = useState({})
-
-  useEffect(() => {
-    if (isOpen) {
-      setFields(
-        initialUser
-          ? {
-              name: initialUser.name,
-              email: initialUser.email,
-              role: initialUser.role,
-              location: initialUser.location,
-              status: initialUser.status,
-            }
-          : EMPTY_FORM,
-      )
-      setErrors({})
-    }
-  }, [isOpen, initialUser])
 
   function handleChange(e) {
     const { name, value } = e.target

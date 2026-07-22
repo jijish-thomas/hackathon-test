@@ -148,19 +148,24 @@ function App() {
         onAddUser={handleAddUser}
       />
 
-      <AddUserModal
-        isOpen={Boolean(editingUser)}
-        onClose={() => setEditingUser(null)}
-        onSaveUser={handleSaveUser}
-        initialUser={editingUser}
-      />
+      {editingUser && (
+        <AddUserModal
+          key={editingUser.id}
+          isOpen
+          onClose={() => setEditingUser(null)}
+          onSaveUser={handleSaveUser}
+          initialUser={editingUser}
+        />
+      )}
 
-      <DeleteConfirmModal
-        isOpen={Boolean(deleteTarget)}
-        userName={deleteTarget?.name ?? ''}
-        onClose={() => setDeleteTargetId(null)}
-        onConfirmDelete={() => handleConfirmDelete(deleteTargetId)}
-      />
+      {deleteTarget && (
+        <DeleteConfirmModal
+          isOpen
+          userName={deleteTarget.name}
+          onClose={() => setDeleteTargetId(null)}
+          onConfirmDelete={() => handleConfirmDelete(deleteTargetId)}
+        />
+      )}
     </>
   )
 }
