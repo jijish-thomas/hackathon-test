@@ -142,11 +142,13 @@ function App() {
         </Grid>
       </Content>
 
-      <AddUserModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAddUser={handleAddUser}
-      />
+      {isModalOpen && (
+        <AddUserModal
+          isOpen
+          onClose={() => setIsModalOpen(false)}
+          onAddUser={handleAddUser}
+        />
+      )}
 
       {editingUser && (
         <AddUserModal

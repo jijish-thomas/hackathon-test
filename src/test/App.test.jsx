@@ -61,14 +61,19 @@ describe('AC-5: new user appears in the table after valid submission', () => {
 })
 
 // AC-6: modal closes after valid submission
-// Carbon keeps the Modal DOM node but controls visibility via the "is-visible" CSS class
-// on the outer wrapper. When open=false, the wrapper loses "is-visible".
+// The Add User modal is conditionally rendered — after submit it is unmounted entirely.
+// Null means unmounted (definitely not visible); if somehow present, it must lack is-visible.
 describe('AC-6: modal closes after valid submission', () => {
   it('modal wrapper is no longer visible after successful submit', () => {
     const { container } = render(<App />)
     fillAndSubmitModal(VALID_USER)
     const modalWrapper = container.querySelector('.cds--modal')
-    expect(modalWrapper).not.toHaveClass('is-visible')
+    // Modal either unmounted (null) or not showing is-visible class
+    if (modalWrapper) {
+      expect(modalWrapper).not.toHaveClass('is-visible')
+    } else {
+      expect(modalWrapper).toBeNull()
+    }
   })
 })
 
