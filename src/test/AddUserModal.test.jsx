@@ -134,3 +134,115 @@ describe('AC-7: cancel closes modal without adding user and resets form', () => 
     expect(screen.getByLabelText(/^Name/i)).toHaveValue('')
   })
 })
+
+const EXISTING_USER = {
+  id: 1,
+  name: 'Ava Johnson',
+  email: 'ava.johnson@example.com',
+  role: 'Product Manager',
+  location: 'Austin, TX',
+  status: 'Active',
+}
+
+function renderEditModal(overrides = {}) {
+  const onClose = vi.fn()
+  const onSaveUser = vi.fn()
+  render(
+    <AddUserModal
+      isOpen={overrides.isOpen ?? true}
+      onClose={overrides.onClose ?? onClose}
+      onAddUser={vi.fn()}
+      onSaveUser={overrides.onSaveUser ?? onSaveUser}
+      initialUser={overrides.initialUser ?? EXISTING_USER}
+    />,
+  )
+  return { onClose, onSaveUser }
+}
+
+// AC-2: Edit modal heading and pre-population
+describe('AC-2: edit modal shows "Edit User" heading and pre-populated fields', () => {
+  it('renders modal heading "Edit User" when initialUser is provided', () => {
+    renderEditModal()
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-label', 'Edit User')
+  })
+
+  it('pre-populates Name field with existing user name', () => {
+    renderEditModal()
+    expect(screen.getByLabelText(/^Name/i)).toHaveValue(EXISTING_USER.name)
+  })
+
+  it('pre-populates Email field with existing user email', () => {
+    renderEditModal()
+    expect(screen.getByLabelText(/^Email/i)).toHaveValue(EXISTING_USER.email)
+  })
+
+  it('pre-populates Role field with existing user role', () => {
+    renderEditModal()
+    expect(screen.getByLabelText(/^Role/i)).toHaveValue(EXISTING_USER.role)
+  })
+
+  it('pre-populates Location field with existing user location', () => {
+    renderEditModal()
+    expect(screen.getByLabelText(/^Location/i)).toHaveValue(EXISTING_USER.location)
+  })
+
+  it('pre-populates Status field with existing user status', () => {
+    renderEditModal()
+    expect(screen.getByLabelText(/^Status/i)).toHaveValue(EXISTING_USER.status)
+  })
+
+  it('renders primary button labeled "Save" in edit mode', () => {
+    renderEditModal()
+    expect(screen.getByRole('button', { name: /^Save$/i })).toBeInTheDocument()
+  })
+})
+
+// AC-3: Edit modal validation — same rules as add mode
+describe('AC-3: edit modal validation blocks invalid submissions', () => {
+  it('shows Name required error when name is cleared on submit', () => {
+    const { onSaveUser } = renderEditModal()
+    fireEvent.change(screen.getByLabelText(/^Name/i), { target: { name: 'name', value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Save$/i }))
+    expect(screen.getByText('Name is required.')).toBeInTheDocument()
+    expect(onSaveUser).not.toHaveBeenCalled()
+  })
+
+  it('shows email format error for invalid email in edit mode', () => {
+    const { onSaveUser } = renderEditModal()
+    fireEvent.change(screen.getByLabelText(/^Email/i), { target: { name: 'email', value: 'notanemail' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Save$/i }))
+    expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument()
+    expect(onSaveUser).not.toHaveBeenCalled()
+  })
+})
+
+// AC-4 (unit level): valid edit submit calls onSaveUser with updated fields preserving id
+describe('AC-4 & AC-8: valid edit submit calls onSaveUser with updated payload including original id', () => {
+  it('calls onSaveUser with updated name and original id', () => {
+    const { onSaveUser } = renderEditModal()
+    fireEvent.change(screen.getByLabelText(/^Name/i), { target: { name: 'name', value: 'Ava Smith' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Save$/i }))
+    expect(onSaveUser).toHaveBeenCalledOnce()
+    expect(onSaveUser).toHaveBeenCalledWith(
+      expect.objectContaining({ id: EXISTING_USER.id, name: 'Ava Smith' }),
+    )
+  })
+
+  it('calls onSaveUser with all five updated fields', () => {
+    const { onSaveUser } = renderEditModal()
+    fireEvent.change(screen.getByLabelText(/^Name/i), { target: { name: 'name', value: 'Ava Smith' } })
+    fireEvent.change(screen.getByLabelText(/^Email/i), { target: { name: 'email', value: 'ava.smith@example.com' } })
+    fireEvent.change(screen.getByLabelText(/^Role/i), { target: { name: 'role', value: 'Director' } })
+    fireEvent.change(screen.getByLabelText(/^Location/i), { target: { name: 'location', value: 'Chicago, IL' } })
+    fireEvent.change(screen.getByLabelText(/^Status/i), { target: { name: 'status', value: 'Inactive' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Save$/i }))
+    expect(onSaveUser).toHaveBeenCalledWith({
+      id: EXISTING_USER.id,
+      name: 'Ava Smith',
+      email: 'ava.smith@example.com',
+      role: 'Director',
+      location: 'Chicago, IL',
+      status: 'Inactive',
+    })
+  })
+})

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import App from '../App'
 
@@ -61,14 +61,19 @@ describe('AC-5: new user appears in the table after valid submission', () => {
 })
 
 // AC-6: modal closes after valid submission
-// Carbon keeps the Modal DOM node but controls visibility via the "is-visible" CSS class
-// on the outer wrapper. When open=false, the wrapper loses "is-visible".
+// The Add User modal is conditionally rendered — after submit it is unmounted entirely.
+// Null means unmounted (definitely not visible); if somehow present, it must lack is-visible.
 describe('AC-6: modal closes after valid submission', () => {
   it('modal wrapper is no longer visible after successful submit', () => {
     const { container } = render(<App />)
     fillAndSubmitModal(VALID_USER)
     const modalWrapper = container.querySelector('.cds--modal')
-    expect(modalWrapper).not.toHaveClass('is-visible')
+    // Modal either unmounted (null) or not showing is-visible class
+    if (modalWrapper) {
+      expect(modalWrapper).not.toHaveClass('is-visible')
+    } else {
+      expect(modalWrapper).toBeNull()
+    }
   })
 })
 
@@ -80,5 +85,150 @@ describe('AC-8: auto-incremented unique IDs for new users', () => {
     fillAndSubmitModal({ ...VALID_USER, name: 'John Smith', email: 'john.smith@example.com' })
     expect(screen.getByText('Jane Doe')).toBeInTheDocument()
     expect(screen.getByText('John Smith')).toBeInTheDocument()
+  })
+})
+
+// ── Edit & Delete integration tests (SCRUM-8) ───────────────────────────────
+
+const FIRST_USER_NAME = 'Ava Johnson' // first row in users.json seed data
+const FIRST_USER_EMAIL = 'ava.johnson@example.com'
+const FIRST_USER_ROLE = 'Product Manager'
+
+// AC-1: Actions column header and per-row icon buttons
+describe('AC-1: Actions column appears with Edit and Delete buttons per row', () => {
+  it('renders an "Actions" column header in the table', () => {
+    render(<App />)
+    expect(screen.getByRole('columnheader', { name: /^Actions$/i })).toBeInTheDocument()
+  })
+
+  it('renders an Edit icon button for each row', () => {
+    render(<App />)
+    // 5 seed users → 5 edit buttons
+    const editButtons = screen.getAllByRole('button', { name: /^Edit /i })
+    expect(editButtons.length).toBe(5)
+  })
+
+  it('renders a Delete icon button for each row', () => {
+    render(<App />)
+    const deleteButtons = screen.getAllByRole('button', { name: /^Delete /i })
+    expect(deleteButtons.length).toBe(5)
+  })
+})
+
+// AC-2: clicking Edit opens pre-populated modal
+describe('AC-2: clicking Edit button opens "Edit User" modal pre-populated with user data', () => {
+  it('opens a dialog with aria-label "Edit User" on click', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Edit ${FIRST_USER_NAME}`, 'i') }))
+    const dialogs = screen.getAllByRole('dialog')
+    const editDialog = dialogs.find((d) => d.getAttribute('aria-label') === 'Edit User')
+    expect(editDialog).toBeTruthy()
+  })
+
+  it('pre-populates the Name field with the user\'s current name', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Edit ${FIRST_USER_NAME}`, 'i') }))
+    const editDialog = screen.getAllByRole('dialog').find((d) => d.getAttribute('aria-label') === 'Edit User')
+    expect(within(editDialog).getByLabelText(/^Name/i)).toHaveValue(FIRST_USER_NAME)
+  })
+
+  it('pre-populates Email, Role, and Location fields', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Edit ${FIRST_USER_NAME}`, 'i') }))
+    const editDialog = screen.getAllByRole('dialog').find((d) => d.getAttribute('aria-label') === 'Edit User')
+    expect(within(editDialog).getByLabelText(/^Email/i)).toHaveValue(FIRST_USER_EMAIL)
+    expect(within(editDialog).getByLabelText(/^Role/i)).toHaveValue(FIRST_USER_ROLE)
+  })
+})
+
+// AC-4 & AC-8: valid edit updates row without affecting other rows or changing id
+describe('AC-4 & AC-8: valid edit updates the user row; other rows and IDs are unaffected', () => {
+  it('updates the name cell for the edited user', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Edit ${FIRST_USER_NAME}`, 'i') }))
+    const editDialog = screen.getAllByRole('dialog').find((d) => d.getAttribute('aria-label') === 'Edit User')
+    fireEvent.change(within(editDialog).getByLabelText(/^Name/i), { target: { name: 'name', value: 'Ava Smith' } })
+    fireEvent.click(within(editDialog).getByRole('button', { name: /^Save$/i }))
+    expect(screen.getByText('Ava Smith')).toBeInTheDocument()
+    // original name gone from the table (not the modal)
+    expect(screen.queryByText(FIRST_USER_NAME)).not.toBeInTheDocument()
+  })
+
+  it('does not affect other user rows after an edit', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Edit ${FIRST_USER_NAME}`, 'i') }))
+    const editDialog = screen.getAllByRole('dialog').find((d) => d.getAttribute('aria-label') === 'Edit User')
+    fireEvent.change(within(editDialog).getByLabelText(/^Name/i), { target: { name: 'name', value: 'Ava Smith' } })
+    fireEvent.click(within(editDialog).getByRole('button', { name: /^Save$/i }))
+    // Second seed user must still be present
+    expect(screen.getByText('Noah Patel')).toBeInTheDocument()
+  })
+
+  it('closes the edit modal after a valid save (Edit User dialog gone)', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Edit ${FIRST_USER_NAME}`, 'i') }))
+    const editDialog = screen.getAllByRole('dialog').find((d) => d.getAttribute('aria-label') === 'Edit User')
+    fireEvent.change(within(editDialog).getByLabelText(/^Name/i), { target: { name: 'name', value: 'Ava Smith' } })
+    fireEvent.click(within(editDialog).getByRole('button', { name: /^Save$/i }))
+    // Edit modal conditionally rendered → should be unmounted
+    const remainingDialogs = screen.queryAllByRole('dialog')
+    expect(remainingDialogs.every((d) => d.getAttribute('aria-label') !== 'Edit User')).toBe(true)
+  })
+})
+
+// AC-5: clicking Delete opens danger confirmation modal naming the user
+describe('AC-5: clicking Delete opens danger confirmation modal with user name', () => {
+  it('opens a modal with heading "Delete {name}?" when Delete is clicked', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Delete ${FIRST_USER_NAME}`, 'i') }))
+    expect(
+      screen.getByRole('heading', { name: new RegExp(`Delete ${FIRST_USER_NAME}\\?`, 'i') }),
+    ).toBeInTheDocument()
+  })
+
+  it('modal has a "Delete" primary button and "Cancel" secondary button', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Delete ${FIRST_USER_NAME}`, 'i') }))
+    const deleteDialog = screen.getAllByRole('dialog').find((d) =>
+      d.getAttribute('aria-label')?.includes(`Delete ${FIRST_USER_NAME}`),
+    )
+    expect(within(deleteDialog).getByRole('button', { name: /^Delete$/i })).toBeInTheDocument()
+    expect(within(deleteDialog).getByRole('button', { name: /Cancel/i })).toBeInTheDocument()
+  })
+})
+
+// AC-6: Cancel in delete confirmation leaves user in table
+describe('AC-6: Cancel in delete confirmation closes modal without removing the user', () => {
+  it('user row is still present after Cancel', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Delete ${FIRST_USER_NAME}`, 'i') }))
+    const deleteDialog = screen.getAllByRole('dialog').find((d) =>
+      d.getAttribute('aria-label')?.includes(`Delete ${FIRST_USER_NAME}`),
+    )
+    fireEvent.click(within(deleteDialog).getByRole('button', { name: /Cancel/i }))
+    expect(screen.getByText(FIRST_USER_NAME)).toBeInTheDocument()
+  })
+})
+
+// AC-7: Delete in confirmation removes user row from table
+describe('AC-7: confirming Delete removes the user row from the table', () => {
+  it('user row is absent after confirming delete', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Delete ${FIRST_USER_NAME}`, 'i') }))
+    const deleteDialog = screen.getAllByRole('dialog').find((d) =>
+      d.getAttribute('aria-label')?.includes(`Delete ${FIRST_USER_NAME}`),
+    )
+    fireEvent.click(within(deleteDialog).getByRole('button', { name: /^Delete$/i }))
+    expect(screen.queryByText(FIRST_USER_NAME)).not.toBeInTheDocument()
+  })
+
+  it('other users remain in table after one delete', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`Delete ${FIRST_USER_NAME}`, 'i') }))
+    const deleteDialog = screen.getAllByRole('dialog').find((d) =>
+      d.getAttribute('aria-label')?.includes(`Delete ${FIRST_USER_NAME}`),
+    )
+    fireEvent.click(within(deleteDialog).getByRole('button', { name: /^Delete$/i }))
+    expect(screen.getByText('Noah Patel')).toBeInTheDocument()
   })
 })
